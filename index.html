@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<title>Mess Board — PSG Tech Hostel</title>
+<meta name="description" content="Live mess menu for PSG Tech Hostel, Peelamedu">
+<meta name="theme-color" content="#D85A30">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mess Board">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,450;9..144,560;9..144,650&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FAF6EF;
+    --cream-2:#F5EFE3;
+    --ink:#2B2620;
+    --ink-soft:#6E675A;
+    --ink-faint:#9B9384;
+    --line:rgba(43,38,32,0.10);
+    --line-strong:rgba(43,38,32,0.16);
+    --card:#FFFFFF;
+
+    --breakfast:#BA7517;   --breakfast-bg:#FAEEDA;  --breakfast-text:#633806;
+    --lunch:#D85A30;       --lunch-bg:#FAECE7;      --lunch-text:#712B13;
+    --snacks:#3B6D11;      --snacks-bg:#EAF3DE;     --snacks-text:#27500A;
+    --dinner:#185FA5;      --dinner-bg:#E6F1FB;     --dinner-text:#0C447C;
+
+    --veg:#3B6D11;
+    --egg:#BA7517;
+    --nonveg:#A32D2D;
+
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:9px;
+
+    color-scheme: light;
+  }
+
+  [data-theme="dark"]{
+    --cream:#1C1915;
+    --cream-2:#231F19;
+    --ink:#F3EEE4;
+    --ink-soft:#B8B0A0;
+    --ink-faint:#847C6D;
+    --line:rgba(243,238,228,0.10);
+    --line-strong:rgba(243,238,228,0.16);
+    --card:#262119;
+
+    --breakfast:#FAC775;  --breakfast-bg:#412402;  --breakfast-text:#FAC775;
+    --lunch:#F0997B;      --lunch-bg:#4A1B0C;      --lunch-text:#F0997B;
+    --snacks:#97C459;     --snacks-bg:#173404;     --snacks-text:#97C459;
+    --dinner:#85B7EB;     --dinner-bg:#042C53;     --dinner-text:#85B7EB;
+
+    --veg:#97C459;
+    --egg:#FAC775;
+    --nonveg:#F09595;
+
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:calc(72px + env(safe-area-inset-bottom));
+    transition:background .25s ease,color .25s ease;
+  }
+  .voice{font-family:'Fraunces',serif;}
+
+  /* ---------- Header ---------- */
+  header.top{
+    position:sticky; top:0; z-index:20;
+    background:var(--cream);
+    padding:calc(16px + env(safe-area-inset-top)) 20px 12px;
+    display:flex; align-items:center; justify-content:space-between;
+    border-bottom:0.5px solid var(--line);
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand .mark{
+    width:34px;height:34px;border-radius:10px;background:#141210;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    border:0.5px solid rgba(255,255,255,0.08);
+  }
+  .brand .mark span{
+    font-family:'Inter',sans-serif; font-weight:700; font-size:12.5px; letter-spacing:.02em;
+    background:linear-gradient(135deg,#FFFFFF 0%,#CFE8FF 28%,#E9D2FF 55%,#FFD7EC 78%,#FFFFFF 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .brand-text .title{font-family:'Fraunces',serif; font-weight:560; font-size:19px; line-height:1.1;}
+  .brand-text .sub{font-size:11px; color:var(--ink-faint); margin-top:1px;}
+  .theme-toggle{
+    width:38px;height:38px;border-radius:50%;border:0.5px solid var(--line-strong);
+    background:var(--card); display:flex;align-items:center;justify-content:center;
+    cursor:pointer; color:var(--ink-soft); flex-shrink:0;
+  }
+  .theme-toggle svg{width:18px;height:18px;}
+
+  main{padding:16px 20px 20px; max-width:560px; margin:0 auto;}
+  .tab{display:none;}
+  .tab.active{display:block; animation:fade .2s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- Now serving / up next hero ---------- */
+  .hero-stack{display:flex; flex-direction:column; gap:10px; margin-bottom:16px;}
+  .hero-primary{
+    border-radius:var(--radius-lg);
+    padding:18px 20px 16px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-primary .icon-wm{position:absolute; top:8px; right:10px; width:58px; height:58px; opacity:.15; pointer-events:none;}
+  .hero-primary .eyebrow{
+    font-size:11px; letter-spacing:.04em; text-transform:uppercase;
+    opacity:.85; margin-bottom:6px; display:flex; align-items:center; gap:6px; position:relative; z-index:1;
+  }
+  .hero-primary .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .hero-primary .items{font-family:'Fraunces',serif; font-weight:450; font-size:19px; line-height:1.32; margin-bottom:10px; position:relative; z-index:1;}
+  .hero-primary .items .orderable{font-weight:700;}
+  .hero-primary .meta{font-size:12px; opacity:.9; display:flex; align-items:center; gap:6px; flex-wrap:wrap; position:relative; z-index:1;}
+  .hero-primary .meta .sep{opacity:.5;}
+
+  .hero-secondary{
+    border-radius:var(--radius-md);
+    padding:12px 15px;
+    background:var(--card);
+    border:0.5px solid var(--line);
+    display:flex; gap:11px; align-items:flex-start;
+  }
+  .hero-secondary .bar{width:4px; align-self:stretch; border-radius:0; flex-shrink:0; min-height:38px;}
+  .hero-secondary .body{flex:1; min-width:0;}
+  .hero-secondary .eyebrow{font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; margin-bottom:3px; font-weight:600;}
+  .hero-secondary .items{font-family:'Fraunces',serif; font-weight:450; font-size:14px; line-height:1.4; color:var(--ink);}
+  .hero-secondary .items .orderable{font-weight:700;}
+  .hero-secondary .meta{font-size:11px; color:var(--ink-faint); margin-top:3px;}
+
+  /* ---------- Meal timeline (today) ---------- */
+  .timeline{display:flex; flex-direction:column; gap:6px;}
+  .meal-row{
+    display:flex; gap:12px; padding:11px 12px; border-radius:var(--radius-sm);
+    border:0.5px solid transparent;
+  }
+  .meal-row.is-now{background:var(--cream-2); border-color:var(--line);}
+  .meal-row.is-past .bar{opacity:.4;}
+  .meal-row.is-past .name{opacity:.65;}
+  .meal-row.is-past .time{opacity:.65;}
+  .meal-row.is-past .dishes{color:var(--ink-soft);}
+  .meal-row .bar{width:4px; border-radius:0; flex-shrink:0;}
+  .meal-row .body{flex:1; min-width:0;}
+  .meal-row .row-top{display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:2px;}
+  .meal-row .name{font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:6px;}
+  .meal-row .time{font-size:11px; color:var(--ink-faint); flex-shrink:0;}
+  .meal-row .dishes{font-size:13.5px; line-height:1.45; font-weight:400;}
+  .meal-row .dishes .orderable{font-weight:700;}
+  .meal-row.is-now .dishes .orderable{font-weight:800;}
+  .meal-row .check{color:var(--ink-faint); flex-shrink:0; align-self:center;}
+
+  .tagdot{width:7px;height:7px;border-radius:50%;display:inline-block; flex-shrink:0;}
+  .tagdot.veg{background:var(--veg);}
+  .tagdot.egg{background:var(--egg);}
+  .tagdot.nonveg{background:var(--nonveg);}
+
+  /* ---------- Info banner ---------- */
+  .timings-strip{
+    margin-top:14px; background:var(--card); border:0.5px solid var(--line);
+    color:var(--ink-soft);
+    border-radius:var(--radius-sm); padding:10px 12px; font-size:11.5px; line-height:1.5;
+    display:flex; gap:8px; align-items:flex-start;
+  }
+  .timings-strip svg{width:15px;height:15px; flex-shrink:0; margin-top:1px; color:var(--ink-faint);}
+
+  /* ---------- Section headers ---------- */
+  h2.section{font-family:'Fraunces',serif; font-weight:560; font-size:16px; margin:0 0 10px;}
+  .legend{display:flex; gap:14px; font-size:11px; color:var(--ink-soft); margin-bottom:14px; flex-wrap:wrap;}
+  .legend span{display:flex; align-items:center; gap:5px;}
+
+  /* ---------- Week view ---------- */
+  .week-fab{
+    position:fixed; right:18px; bottom:calc(76px + env(safe-area-inset-bottom));
+    width:44px; height:44px; border-radius:50%; border:none; cursor:pointer;
+    background:var(--lunch); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 14px rgba(0,0,0,0.28), 0 1px 3px rgba(0,0,0,0.18);
+    z-index:15;
+  }
+  .week-fab:active{transform:scale(0.94);}
+  .week-fab svg{width:21px; height:21px;}
+
+  .day-card{
+    background:var(--card); border:0.5px solid var(--line); border-radius:var(--radius-md);
+    margin-bottom:10px; overflow:hidden;
+  }
+  .day-head{
+    width:100%; display:flex; justify-content:space-between; align-items:center;
+    padding:13px 16px; background:none; border:none; cursor:pointer; text-align:left;
+    color:var(--ink); font-family:inherit;
+  }
+  .day-head .left{display:flex; align-items:center; gap:10px;}
+  .day-head .dayname{font-family:'Fraunces',serif; font-weight:560; font-size:15.5px;}
+  .day-head .today-badge{
+    font-size:10px; padding:2px 7px; border-radius:20px; background:var(--lunch); color:#fff;
+  }
+  .day-head .specials{font-size:11px; color:var(--ink-faint);}
+  .day-head .chevron{color:var(--ink-faint); transition:transform .2s ease; flex-shrink:0;}
+  .day-head .chevron svg{width:16px;height:16px; display:block;}
+  .day-card.open .chevron{transform:rotate(180deg);}
+  .day-body{display:none; padding:0 16px 14px;}
+  .day-card.open .day-body{display:block;}
+  .meal-block{padding:9px 0; border-top:0.5px solid var(--line);}
+  .meal-block .row-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px;}
+  .meal-block .name{font-size:11.5px; font-weight:500; text-transform:uppercase; letter-spacing:.02em;}
+  .meal-block .name.breakfast{color:var(--breakfast);}
+  .meal-block .name.lunch{color:var(--lunch);}
+  .meal-block .name.snacks{color:var(--snacks);}
+  .meal-block .name.dinner{color:var(--dinner);}
+  .meal-block .time{font-size:11px; color:var(--ink-faint);}
+  .meal-block .dishes{font-size:13.5px; line-height:1.5; color:var(--ink); font-weight:400;}
+  .meal-block .dishes .orderable{font-weight:700;}
+
+  .special-badge{
+    display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:500;
+    background:var(--dinner-bg); color:var(--dinner-text); padding:1px 7px; border-radius:20px;
+    margin-left:6px; vertical-align:middle;
+  }
+
+  /* ---------- Search ---------- */
+  .search-box{
+    display:flex; align-items:center; gap:8px; background:var(--card); border:0.5px solid var(--line-strong);
+    border-radius:var(--radius-md); padding:11px 14px; margin-bottom:12px;
+  }
+  .search-box svg{width:17px;height:17px; color:var(--ink-faint); flex-shrink:0;}
+  .search-box input{
+    border:none; outline:none; background:none; font-size:14.5px; color:var(--ink); flex:1;
+    font-family:inherit;
+  }
+  .search-box input::placeholder{color:var(--ink-faint);}
+  .chips{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  .chip{
+    font-size:12.5px; padding:6px 13px; border-radius:20px; border:0.5px solid var(--line-strong);
+    background:var(--card); color:var(--ink-soft); cursor:pointer; user-select:none;
+    display:flex; align-items:center; gap:6px;
+  }
+  .chip.active{background:var(--ink); color:var(--cream); border-color:var(--ink);}
+  .result{
+    background:var(--card); border:0.5px solid var(--line); border-radius:var(--radius-md);
+    padding:12px 14px; margin-bottom:8px;
+  }
+  .result .row-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px;}
+  .result .where{font-size:11px; color:var(--ink-faint);}
+  .result .dish{font-size:13.5px; line-height:1.5; font-weight:400;}
+  .result .dish .orderable{font-weight:700;}
+  .empty{padding:40px 10px; text-align:center; color:var(--ink-faint); font-size:13.5px;}
+  .empty svg{width:30px;height:30px; margin-bottom:10px; opacity:.5;}
+
+  /* ---------- Extras tab ---------- */
+  .extras-note{font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin:-4px 0 14px;}
+  .extras-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px;}
+  .extra-card{
+    background:var(--card); border-radius:var(--radius-md);
+    padding:14px 12px; text-align:center;
+  }
+  .extra-card .exname{
+    font-family:'Inter',sans-serif; font-weight:700; font-size:13px; letter-spacing:.01em;
+    text-transform:uppercase; color:var(--ink); line-height:1.3; margin-bottom:8px;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .extra-card .exprice{
+    font-family:'Fraunces',serif; font-weight:650; font-size:19px; color:var(--lunch);
+  }
+  .extra-card .exprice sup{font-size:12px; font-weight:600; margin-right:1px;}
+  .extras-group-title{
+    font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint);
+    margin:18px 0 8px; font-weight:500;
+  }
+  .extras-group-title:first-of-type{margin-top:0;}
+
+  /* ---------- Info tab ---------- */
+  .info-card{
+    background:var(--card); border:0.5px solid var(--line); border-radius:var(--radius-md);
+    padding:15px 16px; margin-bottom:12px;
+  }
+  .info-card h3{font-family:'Fraunces',serif; font-size:14.5px; font-weight:560; margin:0 0 8px; display:flex; align-items:center; gap:7px;}
+  .info-card h3 svg{width:16px;height:16px; color:var(--lunch); flex-shrink:0;}
+  .info-card p, .info-card li{font-size:13px; line-height:1.6; color:var(--ink-soft); margin:0 0 6px;}
+  .info-card ol{margin:0; padding-left:18px;}
+  .info-card .meta-line{font-size:12px; color:var(--ink-faint); margin-top:10px; padding-top:10px; border-top:0.5px solid var(--line);}
+  .link-btn{
+    display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--lunch);
+    text-decoration:none; margin-top:4px; font-weight:500;
+  }
+  .install-card{
+    background:var(--lunch-bg); color:var(--lunch-text); border-radius:var(--radius-md);
+    padding:14px 16px; margin-bottom:12px; display:none; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .install-card.show{display:flex;}
+  .install-card p{margin:0; font-size:13px; line-height:1.4;}
+  .install-card button{
+    background:var(--lunch-text); color:var(--lunch-bg); border:none; border-radius:20px;
+    padding:8px 16px; font-size:12.5px; font-weight:500; cursor:pointer; flex-shrink:0; font-family:inherit;
+  }
+
+  /* ---------- Bottom nav ---------- */
+  nav.bottom{
+    position:fixed; bottom:0; left:0; right:0; z-index:20;
+    background:var(--cream); border-top:0.5px solid var(--line);
+    padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+    display:flex; justify-content:space-around;
+  }
+  nav.bottom button{
+    background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px;
+    color:var(--ink-faint); font-family:inherit; font-size:10px; cursor:pointer;
+    padding:6px 8px; border-radius:12px; flex:1; max-width:76px;
+  }
+  nav.bottom button svg{width:20px;height:20px;}
+  nav.bottom button.active{color:var(--lunch);}
+
+  @media (min-width:600px){
+    main{padding-left:24px; padding-right:24px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="mark"><span>MK</span></div>
+    <div class="brand-text">
+      <div class="title">Mess board</div>
+      <div class="sub">PSG Tech Hostel</div>
+    </div>
+  </div>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+    <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+  </button>
+</header>
+
+<main>
+
+  <!-- TODAY TAB -->
+  <section class="tab active" id="tab-today">
+    <div id="heroCard"></div>
+    <div class="legend">
+      <span><span class="tagdot veg"></span>Veg</span>
+      <span><span class="tagdot egg"></span>Contains egg</span>
+      <span><span class="tagdot nonveg"></span>Non-veg</span>
+    </div>
+    <div class="timeline" id="todayTimeline"></div>
+    <div class="timings-strip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <span>Breakfast 7&ndash;9 &middot; Lunch 12&ndash;2 &middot; Snacks 4:30&ndash;6 &middot; Dinner 7:30&ndash;9:30&nbsp;pm</span>
+    </div>
+  </section>
+
+  <!-- WEEK TAB -->
+  <section class="tab" id="tab-week">
+    <h2 class="section">This week</h2>
+    <div id="weekList"></div>
+    <button class="week-fab" id="weekFab" aria-label="Jump to today">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>
+    </button>
+  </section>
+
+  <!-- SEARCH TAB -->
+  <section class="tab" id="tab-search">
+    <h2 class="section">Find a dish</h2>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="searchInput" placeholder="Search dishes, days, meals…" autocomplete="off">
+    </div>
+    <div class="chips">
+      <div class="chip active" data-filter="all">All</div>
+      <div class="chip" data-filter="veg"><span class="tagdot veg"></span>Veg only</div>
+      <div class="chip" data-filter="special"><span class="tagdot" style="background:var(--dinner)"></span>Specials</div>
+    </div>
+    <div id="searchResults"></div>
+  </section>
+
+  <!-- EXTRAS TAB -->
+  <section class="tab" id="tab-extras">
+    <h2 class="section">Extras</h2>
+    <p class="extras-note">À la carte items available at the counter, on top of the regular mess menu. Pay per item.</p>
+    <div class="chips">
+      <div class="chip active" data-exfilter="all">All</div>
+      <div class="chip" data-exfilter="v"><span class="tagdot veg"></span>Veg</div>
+      <div class="chip" data-exfilter="e"><span class="tagdot egg"></span>Egg</div>
+      <div class="chip" data-exfilter="n"><span class="tagdot nonveg"></span>Non-veg</div>
+    </div>
+    <div id="extrasList"></div>
+  </section>
+
+  <!-- INFO TAB -->
+  <section class="tab" id="tab-info">
+    <h2 class="section">About this menu</h2>
+
+    <div class="install-card" id="installCard">
+      <p>Install Mess Board on your home screen for one-tap, offline access.</p>
+      <button id="installBtn">Install</button>
+    </div>
+
+    <div class="info-card">
+      <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Standing notes</h3>
+      <ol>
+        <li>The menu is subject to change depending on the availability of stocks in store.</li>
+        <li>Various varieties of banana will be given depending on stocks available in store.</li>
+        <li>The menu will be revised again once the LPG supply is normal.</li>
+      </ol>
+      <p><strong style="color:var(--ink);">Disclaimer:</strong> if groceries are not available, the regular menu cannot be followed. After 8:30&nbsp;pm, if the listed food isn't available, noodles will be provided instead.</p>
+      <div class="meta-line">Breakfast per notice dated 13.03.2026 · lunch, snacks and dinner per notice dated 06.10.2025</div>
+    </div>
+
+    <div class="info-card">
+      <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Meal timings</h3>
+      <p>Breakfast 7:00–9:00 · Lunch 12:00–2:00 · Snacks 4:30–6:00 · Dinner 7:30–9:30 pm. This app auto-highlights whichever meal is currently being served.</p>
+    </div>
+  </section>
+
+</main>
+
+<nav class="bottom">
+  <button class="nav-btn active" data-tab="today" aria-label="Today">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1V10"/></svg>
+    <span>Today</span>
+  </button>
+  <button class="nav-btn" data-tab="week" aria-label="Week">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    <span>Week</span>
+  </button>
+  <button class="nav-btn" data-tab="search" aria-label="Search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <span>Search</span>
+  </button>
+  <button class="nav-btn" data-tab="extras" aria-label="Extras">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    <span>Extras</span>
+  </button>
+  <button class="nav-btn" data-tab="info" aria-label="Info">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <span>Info</span>
+  </button>
+</nav>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= DATA ================= */
+  var MEAL_META = {
+    breakfast:{label:"Breakfast", start:[7,0], end:[9,0]},
+    lunch:{label:"Lunch", start:[12,0], end:[14,0]},
+    snacks:{label:"Snacks", start:[16,30], end:[18,0]},
+    dinner:{label:"Dinner", start:[19,30], end:[21,30]}
+  };
+  var MEAL_ORDER = ["breakfast","lunch","snacks","dinner"];
+
+  // tags: v = veg, e = contains egg, n = non-veg, s = weekly special
+  var MENU = [
+    { day:"Monday",
+      breakfast:{items:"Idly, rava uppuma, sambar, pudina chutney, idly podi, sesame oil, ragi porridge, tea, coffee, milk, bread, jam", tags:["v"]},
+      lunch:{items:"Paruppu kulambu, rice, rasam, curd, beetroot poriyal, ghee, boiled egg (full boiled), lemon juice, onion salad, dhal podi, tapioca chips, mor milagai", tags:["e"]},
+      snacks:{items:"Paruppu vadai (1), ginger tea, coffee, milk", tags:["v"]},
+      dinner:{items:"Kuska roti (3), tamarind rice, paneer butter masala, boiled egg gravy, coconut chutney, pickle, rice, rasam, curd rice, banana", tags:["e"]}
+    },
+    { day:"Tuesday",
+      breakfast:{items:"Idiyappam, coconut milk, kichadi, coconut chutney, ragi porridge, tea, coffee, badam milk, veg salad, bread, jam", tags:["v"]},
+      lunch:{items:"Sweet, soya biryani, veg kurma, curd pachadi, rice, rasam, curd, boiled egg, potato chips, tomato pickle, mor milagai", tags:["e"]},
+      snacks:{items:"Sweet corn, tea, coffee, milk", tags:["v"]},
+      dinner:{items:"Chapati, white sundal kurma, chicken gravy, gobi masala, boiled egg gravy, jam, kambu sadam, rice, rasam, curd rice, banana", tags:["n"]}
+    },
+    { day:"Wednesday",
+      breakfast:{items:"Ven pongal, aval uppuma, coconut chutney, drumstick sambar, ragi porridge, tea, coffee, milk, veg salad, butter, bread, boiled egg, jam", tags:["e"]},
+      lunch:{items:"Green gram curry, rice, rasam, curd, soya curry, omelette, appalam, mango-ginger pickle, onion curry, mor milagai", tags:["e"]},
+      snacks:{items:"Groundnut, salad, tea, milk, dry ginger coffee", tags:["v"]},
+      dinner:{items:"Dosa, lemon rice, coconut chutney, tomato thokku, sambar, boiled egg, pickle, idli podi, sesame oil, rice, rasam, curd rice, banana", tags:["e"]}
+    },
+    { day:"Thursday",
+      breakfast:{items:"Idly, samba rava upma, sambar, tomato chutney, sesame powder, gingelly oil, ragi porridge, tea, coffee, milk, bread, jam", tags:["v"]},
+      lunch:{items:"Drumstick sambar, rice, rasam, curd, cabbage poriyal, appalam, omelette, mango pickle, sesame oil, ice cream, mor milagai", tags:["e","s"], special:"Ice cream"},
+      snacks:{items:"Potato samosa (1), tea, milk, coffee", tags:["v"]},
+      dinner:{items:"Chapati, white kurma, pepper chicken gravy, mushroom manchurian, jam, kambu sadam, rice, rasam, curd rice, banana", tags:["n"]}
+    },
+    { day:"Friday",
+      breakfast:{items:"Kesari, noodles, ragi semiya, tomato sauce, kambangkhool, tea, coffee, milk, bread, jam", tags:["v"]},
+      lunch:{items:"Sundal kulambu, rice, rasam, curd, carrot poriyal, appalam, boiled egg (full boiled), dal payasam, garlic pickle, tomato thokku, mor milagai", tags:["e","s"], special:"Payasam"},
+      snacks:{items:"Veg puff (1), tea, milk, coffee", tags:["v"]},
+      dinner:{items:"Malabar ghee rice, tomato rice, brinjal thokku, curd pachadi, boiled egg, potato chips, pickle, rice, rasam, curd rice, banana", tags:["e"]}
+    },
+    { day:"Saturday",
+      breakfast:{items:"Mini uthappam, rava upma, kadalai curry, mint chutney, ragi porridge, tea, coffee, ragi malt, milk, bread, jam", tags:["v"]},
+      lunch:{items:"Radish sambar, rice, rasam, curd, kovakkai poriyal, groundnut thuvaiyal, egg kulambu, appalam, buttermilk", tags:["e"]},
+      snacks:{items:"Medu bajji or banana bajji (2), thick chutney, tea, coffee, milk", tags:["v"]},
+      dinner:{items:"Idli, kumbakonam kadappa, coconut chutney, mint rice, potato chips, pickle, idli podi, sesame oil, rice, rasam, curd rice, banana", tags:["v"]}
+    },
+    { day:"Sunday",
+      breakfast:{items:"Pongal, coconut chutney, semiya upma, butter, arisi kanji, boiled egg, pudina thuvaiyal, veg salad, tea, coffee, milk, bread, jam", tags:["e"]},
+      lunch:{items:"Veg biryani, curd pachadi, rice, rasam, curd, potato chips, boiled egg, chilli gobi, pallipalayam chicken, mor milagai, lemon juice", tags:["n","s"], special:"Pallipalayam chicken"},
+      snacks:{items:"Cutlet (1), tea, coffee, milk", tags:["v"]},
+      dinner:{items:"Kal dosai, coconut rice, tomato kurma, groundnut chutney, idli podi, pickle, sesame oil, rice, rasam, curd rice, banana", tags:["v"]}
+    }
+  ];
+
+  var DAY_ORDER = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+  var EXTRAS = [
+    { group:"Egg counter", items:[
+      { name:"Boiled egg", price:10, tags:["e"] },
+      { name:"Full boil egg", price:10, tags:["e"] },
+      { name:"Omelette", price:10, tags:["e"] },
+      { name:"Egg gravy", price:25, tags:["e"] }
+    ]},
+    { group:"Chicken & more", items:[
+      { name:"Chicken gravy", price:80, tags:["n"] },
+      { name:"Mushroom manchurian", price:60, tags:["v"] },
+      { name:"Gobi chilli", price:40, tags:["v"] }
+    ]}
+  ];
+
+  // Root keywords tied to each Extras item, so any menu wording that contains
+  // the ingredient — regardless of word order ("chilli gobi" vs "gobi chilli")
+  // or exact preparation name ("pepper chicken gravy", "pallipalayam chicken") —
+  // still gets flagged as orderable. Whole dish segment is bolded, not just the
+  // matched word, so it never looks like a stray half-bolded word.
+  var ORDERABLE_ROOTS = ["egg", "omelette", "chicken", "mushroom", "gobi"];
+
+  /* ================= HELPERS ================= */
+  function pad(n){ return n<10 ? "0"+n : ""+n; }
+  function fmtTime(h,m){
+    var period = h>=12 ? "pm" : "am";
+    var hh = h%12; if(hh===0) hh=12;
+    return hh + (m ? ":"+pad(m) : "") + " " + period;
+  }
+  function minsOfDay(h,m){ return h*60+m; }
+  function tagDots(tags){
+    var out = "";
+    if(tags.indexOf("n")>-1) out += '<span class="tagdot nonveg" title="Non-veg"></span>';
+    else if(tags.indexOf("e")>-1) out += '<span class="tagdot egg" title="Contains egg"></span>';
+    else out += '<span class="tagdot veg" title="Veg"></span>';
+    return out;
+  }
+  function capFirst(items){
+    return items.charAt(0).toUpperCase()+items.slice(1);
+  }
+  function renderDishList(items){
+    return items.split(",").map(function(part){
+      var t = part.trim();
+      if(!t) return "";
+      t = t.charAt(0).toUpperCase()+t.slice(1);
+      var lower = t.toLowerCase();
+      var isOrderable = ORDERABLE_ROOTS.some(function(root){ return lower.indexOf(root) > -1; });
+      return isOrderable ? '<span class="orderable">' + t + '</span>' : t;
+    }).join(", ");
+  }
+
+  function getMenuForJsDay(jsDay){
+    var dayName = DAY_ORDER[jsDay];
+    for(var i=0;i<MENU.length;i++){ if(MENU[i].day===dayName) return MENU[i]; }
+    return MENU[0];
+  }
+
+  var MEAL_ICONS = {
+    breakfast:'<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8Z"/><path d="M6 2v2M10 2v2M14 2v2"/>',
+    lunch:'<path d="M3 11h18v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2Z"/><path d="M7 11V7a2 2 0 0 1 4 0v4"/><path d="M12 3v3M16 3v3"/>',
+    snacks:'<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8Z"/><path d="M6 1c0 1-1 1-1 2M10 1c0 1-1 1-1 2"/>',
+    dinner:'<path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.4 5.4 0 0 1-4.4 2.26 5.4 5.4 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1Z"/>'
+  };
+
+  function currentMealState(now){
+    var nowAbs = minsOfDay(now.getHours(), now.getMinutes());
+
+    var allSlots = [];
+    [0,1].forEach(function(dayOffset){
+      var dayMenu = getMenuForJsDay((now.getDay()+dayOffset)%7);
+      MEAL_ORDER.forEach(function(key){
+        var m = MEAL_META[key];
+        allSlots.push({
+          key:key,
+          dayOffset:dayOffset,
+          startAbs:dayOffset*1440 + minsOfDay(m.start[0],m.start[1]),
+          endAbs:dayOffset*1440 + minsOfDay(m.end[0],m.end[1]),
+          meal:dayMenu[key],
+          meta:m
+        });
+      });
+    });
+
+    var todaySlots = allSlots.slice(0,4);
+
+    var currentIdx = -1;
+    for(var i=0;i<4;i++){
+      if(nowAbs>=allSlots[i].startAbs && nowAbs<allSlots[i].endAbs){ currentIdx=i; break; }
+    }
+
+    var primaryIdx, secondaryIdx, primaryLabel, secondaryLabel;
+    if(currentIdx>-1){
+      primaryIdx=currentIdx; secondaryIdx=currentIdx+1;
+      primaryLabel="Now serving"; secondaryLabel="Up next";
+    } else {
+      var nextIdx=-1;
+      for(i=0;i<allSlots.length;i++){ if(allSlots[i].startAbs>nowAbs){ nextIdx=i; break; } }
+      if(nextIdx===-1) nextIdx=0;
+      primaryIdx=nextIdx; secondaryIdx=nextIdx+1;
+      primaryLabel="Up next"; secondaryLabel="Then";
+    }
+
+    return {
+      todaySlots:todaySlots,
+      nowAbs:nowAbs,
+      primary:allSlots[primaryIdx], primaryLabel:primaryLabel,
+      secondary:allSlots[secondaryIdx], secondaryLabel:secondaryLabel
+    };
+  }
+
+  /* ================= RENDER: TODAY ================= */
+  function renderToday(){
+    var now = new Date();
+    var state = currentMealState(now);
+    var hero = document.getElementById("heroCard");
+
+    function relStr(mins){
+      return mins>60 ? (Math.round(mins/60*10)/10) + "h" : mins + "m";
+    }
+
+    var p = state.primary, accentP = p.key;
+    var primaryMetaStr;
+    if(state.primaryLabel==="Now serving"){
+      primaryMetaStr = "Until " + fmtTime(p.meta.end[0],p.meta.end[1]);
+    } else {
+      var startsIn = p.startAbs - state.nowAbs;
+      primaryMetaStr = (p.dayOffset>0 ? "Tomorrow from " : "Starts ") + fmtTime(p.meta.start[0],p.meta.start[1]) +
+        '<span class="sep">&middot;</span>in ' + relStr(startsIn);
+    }
+
+    var s = state.secondary, accentS = s.key;
+    var secStartsIn = s.startAbs - state.nowAbs;
+    var secMetaStr = (s.dayOffset>0 ? "Tomorrow " : "Today ") + fmtTime(s.meta.start[0],s.meta.start[1]) + " &middot; in " + relStr(secStartsIn);
+
+    hero.innerHTML =
+      '<div class="hero-stack">' +
+        '<div class="hero-primary" style="background:linear-gradient(135deg, var(--'+accentP+'-bg) 0%, color-mix(in srgb, var(--'+accentP+'-bg) 78%, var(--'+accentP+') 22%) 100%); color:var(--'+accentP+'-text);">' +
+          '<svg class="icon-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + MEAL_ICONS[accentP] + '</svg>' +
+          '<div class="eyebrow"><span class="dot"></span>' + state.primaryLabel + ' &middot; ' + p.meta.label.toLowerCase() + (p.dayOffset>0 ? ' &middot; tomorrow' : '') + '</div>' +
+          '<div class="items">' + renderDishList(p.meal.items) + '</div>' +
+          '<div class="meta">' + primaryMetaStr + '</div>' +
+        '</div>' +
+        '<div class="hero-secondary">' +
+          '<div class="bar" style="background:var(--'+accentS+')"></div>' +
+          '<div class="body">' +
+            '<div class="eyebrow" style="color:var(--'+accentS+')">' + state.secondaryLabel + ' &middot; ' + s.meta.label.toLowerCase() + '</div>' +
+            '<div class="items">' + renderDishList(s.meal.items) + '</div>' +
+            '<div class="meta">' + secMetaStr + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    var accentMap = {breakfast:"breakfast", lunch:"lunch", snacks:"snacks", dinner:"dinner"};
+    var timeline = document.getElementById("todayTimeline");
+    timeline.innerHTML = state.todaySlots.map(function(sl){
+      var isNow = state.primaryLabel==="Now serving" && state.primary.key===sl.key;
+      var isPast = sl.endAbs <= state.nowAbs;
+      var cls = "meal-row" + (isNow?" is-now":"") + (isPast && !isNow ? " is-past":"");
+      var accent = accentMap[sl.key];
+      var specialBadge = sl.meal.tags.indexOf("s")>-1 ? '<span class="special-badge">' + (sl.meal.special || "Weekly special") + '</span>' : "";
+      return (
+        '<div class="'+cls+'">' +
+          '<div class="bar" style="background:var(--'+accent+')"></div>' +
+          '<div class="body">' +
+            '<div class="row-top">' +
+              '<span class="name">' + tagDots(sl.meal.tags) + sl.meta.label + specialBadge + '</span>' +
+              '<span class="time">' + fmtTime(sl.meta.start[0],sl.meta.start[1]) + '&ndash;' + fmtTime(sl.meta.end[0],sl.meta.end[1]) + '</span>' +
+            '</div>' +
+            '<div class="dishes">' + renderDishList(sl.meal.items) + '</div>' +
+          '</div>' +
+          (isPast ? '<svg class="check" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : '') +
+        '</div>'
+      );
+    }).join("");
+  }
+
+  /* ================= RENDER: WEEK ================= */
+  function renderWeek(){
+    var now = new Date();
+    var todayName = DAY_ORDER[now.getDay()];
+    var list = document.getElementById("weekList");
+
+    list.innerHTML = MENU.map(function(d, idx){
+      var isToday = d.day === todayName;
+      var specials = MEAL_ORDER.filter(function(k){ return d[k].tags.indexOf("s")>-1; })
+        .map(function(k){ return d[k].special || d[k].items.split(",")[0].trim(); });
+
+      var body = MEAL_ORDER.map(function(k){
+        var meal = d[k];
+        var badge = meal.tags.indexOf("s")>-1 ? '<span class="special-badge">Special</span>' : "";
+        return (
+          '<div class="meal-block">' +
+            '<div class="row-top">' +
+              '<span class="name ' + k + '">' + tagDots(meal.tags) + '&nbsp;' + MEAL_META[k].label + badge + '</span>' +
+              '<span class="time">' + fmtTime(MEAL_META[k].start[0],MEAL_META[k].start[1]) + '</span>' +
+            '</div>' +
+            '<div class="dishes">' + renderDishList(meal.items) + '</div>' +
+          '</div>'
+        );
+      }).join("");
+
+      return (
+        '<div class="day-card' + (isToday?' open':'') + '" data-idx="'+idx+'"' + (isToday?' data-today="1"':'') + '>' +
+          '<button class="day-head">' +
+            '<span class="left"><span class="dayname">' + d.day + '</span>' + (isToday?'<span class="today-badge">Today</span>':'') + '</span>' +
+            '<span class="specials">' + (specials.length ? specials.join(" &middot; ") : "") + '</span>' +
+            '<span class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>' +
+          '</button>' +
+          '<div class="day-body">' + body + '</div>' +
+        '</div>'
+      );
+    }).join("");
+
+    Array.prototype.forEach.call(list.querySelectorAll(".day-head"), function(btn){
+      btn.addEventListener("click", function(){
+        btn.closest(".day-card").classList.toggle("open");
+      });
+    });
+  }
+
+  document.getElementById("weekFab").addEventListener("click", function(){
+    var card = document.querySelector('#weekList .day-card[data-today="1"]');
+    if(!card) return;
+    card.classList.add("open");
+    card.scrollIntoView({behavior:"smooth", block:"center"});
+  });
+
+  /* ================= SEARCH ================= */
+  var activeFilter = "all";
+
+  function buildSearchIndex(){
+    var rows = [];
+    MENU.forEach(function(d){
+      MEAL_ORDER.forEach(function(k){
+        rows.push({ day:d.day, meal:k, label:MEAL_META[k].label, items:d[k].items, tags:d[k].tags });
+      });
+    });
+    return rows;
+  }
+  var SEARCH_INDEX = buildSearchIndex();
+
+  function renderSearch(){
+    var q = document.getElementById("searchInput").value.trim().toLowerCase();
+    var results = SEARCH_INDEX.filter(function(r){
+      if(activeFilter==="veg" && (r.tags.indexOf("e")>-1 || r.tags.indexOf("n")>-1)) return false;
+      if(activeFilter==="special" && r.tags.indexOf("s")===-1) return false;
+      if(!q) return true;
+      return r.items.toLowerCase().indexOf(q)>-1 || r.day.toLowerCase().indexOf(q)>-1 || r.label.toLowerCase().indexOf(q)>-1;
+    });
+
+    var out = document.getElementById("searchResults");
+    if(!results.length){
+      out.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><div>No dishes match that search.</div></div>';
+      return;
+    }
+    out.innerHTML = results.map(function(r){
+      var badge = r.tags.indexOf("s")>-1 ? '<span class="special-badge">Special</span>' : "";
+      return (
+        '<div class="result">' +
+          '<div class="row-top"><span class="where">' + tagDots(r.tags) + '&nbsp;' + r.day + ' &middot; ' + r.label + badge + '</span></div>' +
+          '<div class="dish">' + renderDishList(r.items) + '</div>' +
+        '</div>'
+      );
+    }).join("");
+  }
+
+  /* ================= RENDER: EXTRAS ================= */
+  var activeExtrasFilter = "all";
+
+  function renderExtras(){
+    var out = document.getElementById("extrasList");
+    var html = "";
+    EXTRAS.forEach(function(g){
+      var items = g.items.filter(function(it){
+        return activeExtrasFilter==="all" || it.tags.indexOf(activeExtrasFilter)>-1;
+      });
+      if(!items.length) return;
+      var cards = items.map(function(it){
+        return (
+          '<div class="extra-card">' +
+            '<div class="exname">' + tagDots(it.tags) + it.name + '</div>' +
+            '<div class="exprice"><sup>&#8377;</sup>' + it.price + '</div>' +
+          '</div>'
+        );
+      }).join("");
+      html += '<div class="extras-group-title">' + g.group + '</div><div class="extras-grid">' + cards + '</div>';
+    });
+    out.innerHTML = html || '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><div>No items match that filter.</div></div>';
+  }
+
+  /* ================= TABS ================= */
+  function switchTab(name){
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(t){
+      t.classList.toggle("active", t.id === "tab-"+name);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".nav-btn"), function(b){
+      b.classList.toggle("active", b.dataset.tab === name);
+    });
+    if(name==="week") renderWeek();
+    if(name==="search") renderSearch();
+    if(name==="today") renderToday();
+    if(name==="extras") renderExtras();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".nav-btn"), function(btn){
+    btn.addEventListener("click", function(){ switchTab(btn.dataset.tab); });
+  });
+
+  document.getElementById("searchInput").addEventListener("input", renderSearch);
+  Array.prototype.forEach.call(document.querySelectorAll("#tab-search .chip"), function(chip){
+    chip.addEventListener("click", function(){
+      Array.prototype.forEach.call(document.querySelectorAll("#tab-search .chip"), function(c){ c.classList.remove("active"); });
+      chip.classList.add("active");
+      activeFilter = chip.dataset.filter;
+      renderSearch();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("#tab-extras .chip"), function(chip){
+    chip.addEventListener("click", function(){
+      Array.prototype.forEach.call(document.querySelectorAll("#tab-extras .chip"), function(c){ c.classList.remove("active"); });
+      chip.classList.add("active");
+      activeExtrasFilter = chip.dataset.exfilter;
+      renderExtras();
+    });
+  });
+
+  /* ================= THEME ================= */
+  var SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  var MOON = '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/>';
+
+  function applyTheme(mode){
+    document.documentElement.setAttribute("data-theme", mode);
+    document.getElementById("themeIcon").innerHTML = mode==="dark" ? SUN : MOON;
+    document.querySelector('meta[name="theme-color"]').setAttribute("content", mode==="dark" ? "#1C1915" : "#D85A30");
+    localStorage.setItem("mess-theme", mode);
+  }
+  var savedTheme = localStorage.getItem("mess-theme") ||
+    (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  applyTheme(savedTheme);
+
+  document.getElementById("themeToggle").addEventListener("click", function(){
+    var cur = document.documentElement.getAttribute("data-theme");
+    applyTheme(cur==="dark" ? "light" : "dark");
+  });
+
+  /* ================= INSTALL PROMPT ================= */
+  var deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById("installCard").classList.add("show");
+  });
+  document.getElementById("installBtn").addEventListener("click", function(){
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.then && deferredPrompt.then(function(){ deferredPrompt = null; });
+    document.getElementById("installCard").classList.remove("show");
+  });
+  window.addEventListener("appinstalled", function(){
+    document.getElementById("installCard").classList.remove("show");
+  });
+
+  /* ================= REFRESH ON RESUME ================= */
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "visible") renderToday();
+  });
+  setInterval(renderToday, 60000);
+
+  /* ================= INIT ================= */
+  renderToday();
+
+  /* ================= SERVICE WORKER ================= */
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(){});
+    });
+  }
+})();
+</script>
+</body>
+</html>
