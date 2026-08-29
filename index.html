@@ -116,6 +116,13 @@
     padding:18px 20px 16px;
     position:relative;
     overflow:hidden;
+    animation:heroIn .45s cubic-bezier(.22,1,.36,1) both;
+  }
+  .hero-primary.is-live{animation:heroIn .45s cubic-bezier(.22,1,.36,1) both, livGlow 3.2s ease-in-out .45s infinite;}
+  @keyframes heroIn{from{opacity:0; transform:translateY(8px) scale(.98);}to{opacity:1; transform:translateY(0) scale(1);}}
+  @keyframes livGlow{
+    0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, currentColor 0%, transparent);}
+    50%{box-shadow:0 0 26px 2px color-mix(in srgb, currentColor 22%, transparent);}
   }
   .hero-primary .icon-wm{position:absolute; top:8px; right:10px; width:58px; height:58px; opacity:.15; pointer-events:none;}
   .hero-primary .eyebrow{
@@ -123,8 +130,14 @@
     opacity:.85; margin-bottom:6px; display:flex; align-items:center; gap:6px; position:relative; z-index:1;
   }
   .hero-primary .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .hero-primary.is-live .dot{animation:livePulse 1.6s ease-in-out infinite;}
+  @keyframes livePulse{
+    0%{transform:scale(1); opacity:1;}
+    50%{transform:scale(2.1); opacity:.35;}
+    100%{transform:scale(1); opacity:1;}
+  }
   .hero-primary .items{font-family:'Fraunces',serif; font-weight:450; font-size:19px; line-height:1.32; margin-bottom:10px; position:relative; z-index:1;}
-  .hero-primary .items .orderable{font-weight:700;}
+  .hero-primary .items .orderable{font-weight:700; background:color-mix(in srgb, currentColor 18%, transparent); padding:0.5px 6px; border-radius:6px; -webkit-box-decoration-break:clone; box-decoration-break:clone;}
   .hero-primary .meta{font-size:12px; opacity:.9; display:flex; align-items:center; gap:6px; flex-wrap:wrap; position:relative; z-index:1;}
   .hero-primary .meta .sep{opacity:.5;}
 
@@ -134,12 +147,15 @@
     background:var(--card);
     border:0.5px solid var(--line);
     display:flex; gap:11px; align-items:flex-start;
+    animation:heroIn .45s cubic-bezier(.22,1,.36,1) .07s both;
   }
   .hero-secondary .bar{width:4px; align-self:stretch; border-radius:0; flex-shrink:0; min-height:38px;}
   .hero-secondary .body{flex:1; min-width:0;}
   .hero-secondary .eyebrow{font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; margin-bottom:3px; font-weight:600;}
+  .hero-secondary.is-then .eyebrow{color:var(--ink-faint) !important; font-weight:500;}
+  .hero-secondary.is-then{opacity:.82;}
   .hero-secondary .items{font-family:'Fraunces',serif; font-weight:450; font-size:14px; line-height:1.4; color:var(--ink);}
-  .hero-secondary .items .orderable{font-weight:700;}
+  .hero-secondary .items .orderable{font-weight:700; background:color-mix(in srgb, currentColor 14%, transparent); padding:0.5px 6px; border-radius:6px; -webkit-box-decoration-break:clone; box-decoration-break:clone;}
   .hero-secondary .meta{font-size:11px; color:var(--ink-faint); margin-top:3px;}
 
   /* ---------- Meal timeline (today) ---------- */
@@ -159,7 +175,7 @@
   .meal-row .name{font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:6px;}
   .meal-row .time{font-size:11px; color:var(--ink-faint); flex-shrink:0;}
   .meal-row .dishes{font-size:13.5px; line-height:1.45; font-weight:400;}
-  .meal-row .dishes .orderable{font-weight:700;}
+  .meal-row .dishes .orderable{font-weight:700; background:color-mix(in srgb, var(--lunch) 14%, transparent); color:var(--lunch); padding:0.5px 6px; border-radius:6px; -webkit-box-decoration-break:clone; box-decoration-break:clone;}
   .meal-row.is-now .dishes .orderable{font-weight:800;}
   .meal-row .check{color:var(--ink-faint); flex-shrink:0; align-self:center;}
 
@@ -223,7 +239,7 @@
   .meal-block .name.dinner{color:var(--dinner);}
   .meal-block .time{font-size:11px; color:var(--ink-faint);}
   .meal-block .dishes{font-size:13.5px; line-height:1.5; color:var(--ink); font-weight:400;}
-  .meal-block .dishes .orderable{font-weight:700;}
+  .meal-block .dishes .orderable{font-weight:700; background:color-mix(in srgb, var(--lunch) 14%, transparent); color:var(--lunch); padding:0.5px 6px; border-radius:6px; -webkit-box-decoration-break:clone; box-decoration-break:clone;}
 
   .special-badge{
     display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:500;
@@ -256,7 +272,7 @@
   .result .row-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px;}
   .result .where{font-size:11px; color:var(--ink-faint);}
   .result .dish{font-size:13.5px; line-height:1.5; font-weight:400;}
-  .result .dish .orderable{font-weight:700;}
+  .result .dish .orderable{font-weight:700; background:color-mix(in srgb, var(--lunch) 14%, transparent); color:var(--lunch); padding:0.5px 6px; border-radius:6px; -webkit-box-decoration-break:clone; box-decoration-break:clone;}
   .empty{padding:40px 10px; text-align:center; color:var(--ink-faint); font-size:13.5px;}
   .empty svg{width:30px;height:30px; margin-bottom:10px; opacity:.5;}
 
@@ -641,15 +657,18 @@
     var secStartsIn = s.startAbs - state.nowAbs;
     var secMetaStr = (s.dayOffset>0 ? "Tomorrow " : "Today ") + fmtTime(s.meta.start[0],s.meta.start[1]) + " &middot; in " + relStr(secStartsIn);
 
+    var isLive = state.primaryLabel==="Now serving";
+    var isThen = state.secondaryLabel==="Then";
+
     hero.innerHTML =
       '<div class="hero-stack">' +
-        '<div class="hero-primary" style="background:linear-gradient(135deg, var(--'+accentP+'-bg) 0%, color-mix(in srgb, var(--'+accentP+'-bg) 78%, var(--'+accentP+') 22%) 100%); color:var(--'+accentP+'-text);">' +
+        '<div class="hero-primary' + (isLive?' is-live':'') + '" style="background:linear-gradient(135deg, var(--'+accentP+'-bg) 0%, color-mix(in srgb, var(--'+accentP+'-bg) 78%, var(--'+accentP+') 22%) 100%); color:var(--'+accentP+'-text);">' +
           '<svg class="icon-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + MEAL_ICONS[accentP] + '</svg>' +
           '<div class="eyebrow"><span class="dot"></span>' + state.primaryLabel + ' &middot; ' + p.meta.label.toLowerCase() + (p.dayOffset>0 ? ' &middot; tomorrow' : '') + '</div>' +
           '<div class="items">' + renderDishList(p.meal.items) + '</div>' +
           '<div class="meta">' + primaryMetaStr + '</div>' +
         '</div>' +
-        '<div class="hero-secondary">' +
+        '<div class="hero-secondary' + (isThen?' is-then':'') + '">' +
           '<div class="bar" style="background:var(--'+accentS+')"></div>' +
           '<div class="body">' +
             '<div class="eyebrow" style="color:var(--'+accentS+')">' + state.secondaryLabel + ' &middot; ' + s.meta.label.toLowerCase() + '</div>' +
